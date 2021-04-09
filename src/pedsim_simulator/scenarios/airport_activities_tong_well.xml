@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This scenario file was created by SGDiCoP on 2014-06-05T18:26:32-->
+<scenario>
+    <!--Obstacles-->
+<!--     <obstacle x1="10" y1="0" x2="20" y2="0"/>
+    <obstacle x1="0" y1="0" x2="0" y2="30"/>
+    <obstacle x1="15" y1="30" x2="55" y2="30"/>
+    <obstacle x1="60" y1="25" x2="60" y2="5"/>
+    <obstacle x1="40" y1="0" x2="55" y2="0"/>
+    <obstacle x1="0" y1="30" x2="5" y2="30"/> -->
+
+
+
+    <obstacle x1="0" y1="0" x2="0" y2="10"/>
+    <obstacle x1="0" y1="20" x2="0" y2="30"/>
+    <obstacle x1="0" y1="40" x2="0" y2="50"/>
+    <obstacle x1="50" y1="0" x2="50" y2="10"/>
+    <obstacle x1="50" y1="20" x2="50" y2="30"/>
+    <obstacle x1="50" y1="40" x2="50" y2="50"/>
+    <!--Waypoints (incl. WaitingQueues)-->
+    <waypoint id="A" x="-10" y="15" r="5" b="2"/>
+   <!--  <waypoint id="A" x="10" y="15" r="3" b="1"/> -->
+    <waypoint id="B" x="10" y="15" r="5"/>
+    <waypoint id="C" x="30" y="15" r="5"/>
+    <waypoint id="D" x="50" y="15" r="5"/>
+    <waypoint id="E" x="70" y="15" r="5" b="2"/>
+
+    <waypoint id="robot_goal" x="22" y="27" r="2"/>
+    <waypoint id="robot_start" x="4" y="4" r="2"/>
+
+
+
+    <agent x="10" y="15" n="5" dx="3" dy="2" type="0">
+        <!-- <addwaypoint id="B"/> -->
+        <addwaypoint id="C"/>
+        <addwaypoint id="D"/>
+        <!-- <addwaypoint id="D"/> -->
+<!--         <addqueue id="kq"/> -->
+        <addwaypoint id="E"/>
+        <!-- <addwaypoint id="B"/> -->
+    </agent>
+
+    <agent x="50" y="15" n="6" dx="3" dy="2" type="0">
+        <!-- <addwaypoint id="B"/> -->
+        <addwaypoint id="C"/>
+        <addwaypoint id="B"/>
+        <!-- <addwaypoint id="D"/> -->
+<!--         <addqueue id="kq"/> -->
+        <addwaypoint id="A"/>
+        <!-- <addwaypoint id="B"/> -->
+    </agent>
+
+    <agent x="2.5" y="2.5" n="1" dx="0" dy="0" type="2">
+        <addwaypoint id="robot_start"/>
+        <addwaypoint id="robot_goal"/>
+    </agent>
+
+
+    
+</scenario>
