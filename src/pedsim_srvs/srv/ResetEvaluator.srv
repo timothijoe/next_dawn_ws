@@ -1,0 +1,4 @@
+int16 task_id  # 0 for origion, 1: go to flow
+int16 compare_label # 0 for do nothing, 1 for compare, 2 for recording
+---
+bool finished

@@ -1,0 +1,6 @@
+int16 random_seed_id
+string scene_name
+bool use_default_robot_position
+float64[] robot_pos
+---
+bool finished

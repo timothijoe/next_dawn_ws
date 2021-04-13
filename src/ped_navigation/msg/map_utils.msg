@@ -1,0 +1,12 @@
+Header header
+geometry_msgs/Point32 origin
+geometry_msgs/Vector3 resolutions
+int16 size_x
+int16 size_y
+int16 size_z
+ped_navigation/m_static_map static_map
+ped_navigation/m_cluster_map cluster_map
+ped_navigation/m_density_map density_map
+ped_navigation/m_velocity_map velocity_map
+ped_navigation/m_static_map[] vec_static_maps
+ped_navigation/m_ped_xvi[] peds_info

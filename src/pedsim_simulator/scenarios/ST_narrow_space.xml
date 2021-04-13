@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This scenario file was created by SGDiCoP on 2014-06-05T18:26:32-->
+<scenario>
+    <!--Obstacles-->
+<!--     <obstacle x1="10" y1="0" x2="20" y2="0"/>
+    <obstacle x1="0" y1="0" x2="0" y2="30"/>
+    <obstacle x1="15" y1="30" x2="55" y2="30"/>
+    <obstacle x1="60" y1="25" x2="60" y2="5"/>
+    <obstacle x1="40" y1="0" x2="55" y2="0"/>
+    <obstacle x1="0" y1="30" x2="5" y2="30"/> -->
+
+
+
+    <obstacle x1="0" y1="5" x2="4" y2="5"/>
+    <obstacle x1="5" y1="0" x2="5" y2="4"/>
+    <obstacle x1="10" y1="0" x2="10" y2="4"/>
+    <obstacle x1="10" y1="5" x2="25" y2="5"/>
+    <obstacle x1="0" y1="12" x2="14" y2="12"/>
+    <obstacle x1="15" y1="12" x2="15" y2="17"/>
+    <obstacle x1="20" y1="12" x2="20" y2="17"/>
+    <obstacle x1="20" y1="12" x2="25" y2="12"/>
+
+
+
+
+<!--     <obstacle x1="1" y1="10" x2="4" y2="10"/>
+ -->
+    <!--Waypoints (incl. WaitingQueues)-->
+<!--     <waypoint id="A" x="-10" y="15" r="5" b="2"/> -->
+    <waypoint id="A1" x="7" y="4" r="1.0"/>
+    <waypoint id="A2" x="10" y="8" r="2"/>
+    <waypoint id="A3" x="25" y="8" r="2"/>
+    <waypoint id="A4" x="27" y="8" r="4" b="2"/>
+
+   <!--  <waypoint id="A" x="10" y="15" r="3" b="1"/> -->
+    <waypoint id="B1" x="12" y="8" r="1.0"/>
+    <waypoint id="B2" x="16" y="8" r="1.5"/>
+    <waypoint id="B3" x="16.5" y="15" r="2.0"/>
+    <waypoint id="B4" x="16.5" y="18" r="3" b="2"/>
+
+    <waypoint id="C1" x="18" y="6.5" r="3"/>
+    <waypoint id="C2" x="7.5" y="6.5" r="3"/>
+    <waypoint id="C3" x="8" y="2.0" r="1" b="2"/>
+
+    <waypoint id="D1" x="17" y="12" r="2"/>
+    <waypoint id="D2" x="13" y="7.5" r="3"/>
+    <waypoint id="D3" x="2" y="7.5" r="1.5" b="2"/>
+
+
+    <waypoint id="L1" x="18" y="3" r="3"/>
+    <waypoint id="L2" x="12" y="3" r="3"/>
+    <waypoint id="L3" x="2" y="3" r="3" b="2"/>
+
+<!--     <waypoint id="E" x="70" y="15" r="5" b="2"/> -->
+
+    <waypoint id="robot_goal" x="22" y="27" r="2"/>
+    <waypoint id="robot_start" x="4" y="4" r="2"/>
+
+
+
+    <source x="7" y="2" n="4" dx="1" dy="3" type="0">
+        <addwaypoint id="A1"/>
+        <addwaypoint id="A2"/>
+        <addwaypoint id="A3"/>
+        <addwaypoint id="A4"/>
+
+    </source>
+
+    <source x="3" y="8" n="6" dx="3" dy="1" type="0">
+        <addwaypoint id="B1"/>
+        <addwaypoint id="B2"/>
+        <addwaypoint id="B3"/>
+        <addwaypoint id="B4"/>
+
+    </source>
+
+    <source x="25" y="8" n="3" dx="3" dy="1" type="0">
+        <addwaypoint id="C1"/>
+        <addwaypoint id="C2"/>
+        <addwaypoint id="C3"/>
+
+    </source>
+
+    <source x="17" y="17" n="3" dx="3" dy="1" type="0">
+        <addwaypoint id="D1"/>
+        <addwaypoint id="D2"/>
+        <addwaypoint id="D3"/>
+
+    </source>
+<!--     <source x="3" y="-3" n="5" dx="1" dy="3" type="0">
+        <addwaypoint id="A1"/>
+        <addwaypoint id="A2"/>
+        <addwaypoint id="A3"/>
+        <addwaypoint id="A4"/>
+        <addwaypoint id="A5"/>
+        <addwaypoint id="A6"/>
+    </source> -->
+<!--     <agent x="2.5" y="2.5" n="1" dx="0" dy="0" type="2">
+        <addwaypoint id="robot_start"/>
+        <addwaypoint id="robot_goal"/>
+    </agent> -->
+
+
+    
+</scenario>
