@@ -1,0 +1,4 @@
+*.workspace
+*.catkin_workspace
+build/
+devel/

@@ -30,6 +30,7 @@ struct pedestrian_pose{//ros pose msgs use quaternion and the function provided 
 };
 
 nav_msgs::OccupancyGrid grid;
+
 //nav_msgs::OccupancyGrid modified_grid;
 riskrrt::OccupancyGridArray og_array;
 int nbMap;
@@ -38,6 +39,7 @@ double timeStep;
 
 int gridIFromPose(custom_pose pose){
   return (int)round((pose.x - grid.info.origin.position.x) / grid.info.resolution);
+
 }
 
 int gridJFromPose(custom_pose pose){
@@ -74,9 +76,9 @@ int gridIndexFromPose(custom_pose pose){
 void ogmap_clear(){
   og_array.array.clear();
   //nav_msgs::OccupancyGrid grid;
-  grid.info.resolution = 0.3; // 0.054
-  grid.info.width = int (40 / grid.info.resolution);
-  grid.info.height = int (18 / grid.info.resolution);
+//  grid.info.resolution = 0.3; // 0.054
+//  grid.info.width = int (40 / grid.info.resolution);
+//  grid.info.height = int (18 / grid.info.resolution);
   for(int i=0; i < nbMap; i++){
     og_array.array.push_back(grid);
   }
@@ -85,6 +87,7 @@ void ogmap_clear(){
 void pedestrian_callback(const pedsim_msgs::AgentStatesPtr data)
 {
    ogmap_clear();
+   int zt = 0;
    for(auto it=data->agent_states.begin();it!=data->agent_states.end(); ++it){
      pedestrian_pose ped_pose;
      int i, j, k;
@@ -99,7 +102,6 @@ void pedestrian_callback(const pedsim_msgs::AgentStatesPtr data)
      ped_pose.py = it->pose.position.y;
      ped_pose.vx = it->twist.linear.x;
      ped_pose.vy = it->twist.linear.y;
-
      for(int k = 0; k < nbMap; k++){
        double temp_pose_x = ped_pose.px + k * timeStep * ped_pose.vx;
        double temp_pose_y = ped_pose.px + k * timeStep * ped_pose.vy;
@@ -108,14 +110,13 @@ void pedestrian_callback(const pedsim_msgs::AgentStatesPtr data)
        temp_pose.y = temp_pose_y;
        ped_grid_i = gridIFromPose(temp_pose);
        ped_grid_j = gridJFromPose(temp_pose);
-
-       min_i = max(ped_grid_i - 5, 0);
-       max_i = min(ped_grid_i + 5, (int)grid.info.width);
-       min_j = max(ped_grid_j - 5, 0);
-       max_j = min(ped_grid_j + 5, (int)grid.info.height);
-
+       min_i = max(ped_grid_i - 2, 0);
+       max_i = min(ped_grid_i + 2, (int)grid.info.width);
+       min_j = max(ped_grid_j - 2, 0);
+       max_j = min(ped_grid_j + 2, (int)grid.info.height);
        for(i=min_i ; i<=max_i ; i++){for(j=min_j ; j<=max_j ; j++){og_array.array[k].data[gridIndexFromCoord(i,j)] = 100;}}
      }
+     zt += 1;
    }
 }
 
@@ -123,6 +124,13 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "og_builder_stage");
   ros::NodeHandle n;
+  grid.info.resolution = 0.3; // 0.054
+  grid.info.width = int (40 / grid.info.resolution);
+  grid.info.height = int (18 / grid.info.resolution);
+  //vector<int> gridd(grid.info.width * grid.info.height);
+  for(int i = 0; i < grid.info.width * grid.info.height; i++){
+      grid.data.push_back(0);
+  }
 
   n.param("maxDepth", nbMap, 10);
   n.param("timeStep", timeStep, 0.5);
@@ -135,7 +143,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     ros::spinOnce();
-    og_pub.publish(og_array);
+    //og_pub.publish(og_array);
     loop_rate.sleep();
   }
   return 0;
