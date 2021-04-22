@@ -88,6 +88,7 @@ void pedestrian_callback(const pedsim_msgs::AgentStatesPtr data)
 {
    ogmap_clear();
    int zt = 0;
+   //std::cout << "why not found " << std::endl;
    for(auto it=data->agent_states.begin();it!=data->agent_states.end(); ++it){
      pedestrian_pose ped_pose;
      int i, j, k;
@@ -118,6 +119,7 @@ void pedestrian_callback(const pedsim_msgs::AgentStatesPtr data)
      }
      zt += 1;
    }
+   std::cout << "zt number: " << zt << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -127,6 +129,7 @@ int main(int argc, char **argv)
   grid.info.resolution = 0.3; // 0.054
   grid.info.width = int (40 / grid.info.resolution);
   grid.info.height = int (18 / grid.info.resolution);
+  std::cout << "grid vector size:"<< grid.info.width << " and " << grid.info.height << std::endl;
   //vector<int> gridd(grid.info.width * grid.info.height);
   for(int i = 0; i < grid.info.width * grid.info.height; i++){
       grid.data.push_back(0);
@@ -143,7 +146,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     ros::spinOnce();
-    //og_pub.publish(og_array);
+    og_pub.publish(og_array);
     loop_rate.sleep();
   }
   return 0;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.4.1, 2021-04-20T15:28:02. -->
+<!-- Written by QtCreator 4.4.1, 2021-04-22T21:18:45. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -381,9 +381,9 @@
       <value type="QString" key="ROSProjectManager.ROSGenericStep.Arguments"></value>
       <value type="QString" key="ROSProjectManager.ROSGenericStep.Command">rosrun</value>
       <value type="bool" key="ROSProjectManager.ROSGenericStep.DebugContinueOnAttach">false</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Package">ped_navigation</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Target">map_utils</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.TargetPath">/home/tony/temp/next_dawn_ws/devel/lib/ped_navigation/map_utils</value>
+      <value type="QString" key="ROSProjectManager.ROSGenericStep.Package">riskrrt</value>
+      <value type="QString" key="ROSProjectManager.ROSGenericStep.Target">og_builder</value>
+      <value type="QString" key="ROSProjectManager.ROSGenericStep.TargetPath">/home/tony/temp/next_dawn_ws/devel/lib/riskrrt/og_builder</value>
      </valuemap>
      <valuemap type="QVariantMap" key="ProjectExplorer.RunStepList.Step.2">
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName"></value>
@@ -393,23 +393,11 @@
       <value type="QString" key="ROSProjectManager.ROSGenericStep.Arguments"></value>
       <value type="QString" key="ROSProjectManager.ROSGenericStep.Command">rosrun</value>
       <value type="bool" key="ROSProjectManager.ROSGenericStep.DebugContinueOnAttach">false</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Package">ped_navigation</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Target">decision_makerr</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.TargetPath">/home/tony/temp/next_dawn_ws/devel/lib/ped_navigation/decision_makerr</value>
+      <value type="QString" key="ROSProjectManager.ROSGenericStep.Package">riskrrt</value>
+      <value type="QString" key="ROSProjectManager.ROSGenericStep.Target">riskrrt_planner</value>
+      <value type="QString" key="ROSProjectManager.ROSGenericStep.TargetPath">/home/tony/temp/next_dawn_ws/devel/lib/riskrrt/riskrrt_planner</value>
      </valuemap>
-     <valuemap type="QVariantMap" key="ProjectExplorer.RunStepList.Step.3">
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName"></value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ROSProjectManager.ROSRunStep</value>
-      <value type="bool" key="ProjectExplorer.RunStep.Enabled">true</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Arguments"></value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Command">rosrun</value>
-      <value type="bool" key="ROSProjectManager.ROSGenericStep.DebugContinueOnAttach">false</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Package">ped_navigation</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.Target">local_planner</value>
-      <value type="QString" key="ROSProjectManager.ROSGenericStep.TargetPath">/home/tony/temp/next_dawn_ws/devel/lib/ped_navigation/local_planner</value>
-     </valuemap>
-     <value type="int" key="ProjectExplorer.RunStepList.StepsCount">4</value>
+     <value type="int" key="ProjectExplorer.RunStepList.StepsCount">3</value>
     </valuemap>
     <value type="uint" key="RunConfiguration.QmlDebugServerPort">3768</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>

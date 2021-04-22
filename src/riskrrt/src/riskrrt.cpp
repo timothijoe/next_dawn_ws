@@ -2,6 +2,7 @@
 
 RRT::RRT(Params params)
 {
+    this->params = params;
 
 }
 
@@ -27,8 +28,294 @@ void RRT::init()
   //the tree root is the first candidate to grow
   candidate_nodes.clear();
   candidate_nodes.push_back(root);
+}
 
+void RRT::grow()
+{
+    Node* best_node_to_grow;
+    custom_pose random_goal;
+    //choosing a random point in window
+    random_goal = chooseRandomGoal();
+    //choosing the best node within the tree to grow toward the random point
+    best_node_to_grow = chooseBestNode(random_goal);
+    //checking if there is an actual best node (in some situations, it is possible to have none. for instance, if root is in collision)
+    if(best_node_to_grow != NULL){
+      //extend the tree from the best node to the random point by choosing the best control
+      extend(best_node_to_grow, random_goal);
+    }
+    else ROS_INFO("ROBOT STUCK");
+}
 
+void RRT::update()
+{
+    Node* current_node;
+      vector<Node*> node_stack;
+      int i;
+      int nb_nodes;
+      visualization_msgs::Marker node_marker;
+
+      nb_nodes = 0;
+      candidate_nodes.clear();
+
+      //robot is always somewhere between root and the first node of the trajectory
+      //thus, when the robot is moving, root and its descendants (except the subtree defined by the first node of the trajectory) are unreachable
+      //there is no need in updating them or adding them in the candidate nodes vector
+      //if(traj.size() > 1){
+        //node_stack.push_back(traj[1]);
+      //}
+      //else{
+        node_stack.push_back(root);
+      //}
+      while(!node_stack.empty()){
+        current_node = node_stack.back();
+        node_stack.pop_back();
+        if(!current_node->sons.empty()){
+          for(i=0; i<current_node->sons.size(); i++){
+            node_stack.push_back(current_node->sons[i]);
+          }
+        }
+        //update the depth
+        if(current_node->parent != NULL){
+          current_node->depth = current_node->parent->depth + 1;
+        }
+        current_node->risk = computeNodeRisk(current_node);
+        current_node->isFree = (current_node->risk <= params.threshold);
+        //add the "good" nodes to the candidate nodes vector
+        if(current_node->isFree && current_node->depth < params.maxDepth && current_node->isOpen){
+          candidate_nodes.push_back(current_node);
+        }
+        nb_nodes++;
+        //rviz marker for nodes
+        node_marker.header.frame_id = "/map";
+        node_marker.header.stamp = ros::Time::now();
+        node_marker.id = nb_nodes;
+        node_marker.ns = "tree";
+        node_marker.type = visualization_msgs::Marker::SPHERE;
+        node_marker.action = visualization_msgs::Marker::ADD;
+        node_marker.pose.position.x = current_node->pose.x;
+        node_marker.pose.position.y = current_node->pose.y;
+        node_marker.pose.position.z = 0.05;
+        node_marker.scale.x = 0.1;
+        node_marker.scale.y = 0.1;
+        node_marker.scale.z = 0.1;
+        node_marker.color.r = 0.0f;
+        node_marker.color.g = 1.0f;
+        node_marker.color.b = 0.0f;
+        node_marker.color.a = 1.0;
+        node_marker.lifetime = ros::Duration(1.0);
+        node_markers.markers.push_back(node_marker);
+
+      }
+
+}
+
+void RRT::deleteUnreachableNodes(Node *new_root)
+{
+    Node* current_node;
+    vector<Node*> node_stack;
+    int i;
+
+    node_stack.push_back(root);
+    while(!node_stack.empty()){
+      current_node = node_stack.back();
+      node_stack.pop_back();
+      if(!current_node->sons.empty()){
+        for(i=0; i<current_node->sons.size(); i++){
+          if(current_node->sons[i] != new_root){
+            node_stack.push_back(current_node->sons[i]);
+          }
+        }
+      }
+      current_node->sons.clear();
+      current_node->parent = NULL;
+      current_node->possible_controls.clear();
+      delete current_node;
+    }
+}
+
+Node *RRT::chooseBestNode(custom_pose goal)
+{
+    Node* best_rated_node;
+    Node* current_node;
+    double best_weight;
+    double current_weight;
+    int i;
+
+    best_rated_node = NULL;
+    best_weight = 0.0;
+    for(i=0; i<candidate_nodes.size(); i++){
+      current_node = candidate_nodes[i];
+      current_weight = computeNodeWeight(current_node, goal);
+      //node weight is better, node is free and open, node depth is less than maximum depth
+      if(best_weight <= current_weight && current_node->isOpen){
+        best_rated_node = current_node;
+        best_weight = current_weight;
+      }
+    }
+
+    return best_rated_node;
+}
+
+void RRT::findPath()
+{
+    riskrrt::PoseTwistStamped pose_twist;
+    Node* current_node;
+    visualization_msgs::Marker path_marker;
+
+    traj_msg.poses.clear();
+    traj.clear();
+    //find the best node to go toward the final goal and add it to the trajectory
+    best_node = chooseBestNode(final_goal);
+    //if there is no best node, pick root
+    if(best_node == NULL){
+    best_node = root;
+    }
+    //fill the twist message with node attributes
+    pose_twist.pose.position.x = best_node->pose.x;
+    pose_twist.pose.position.y = best_node->pose.y;
+    pose_twist.pose.orientation = tf::createQuaternionMsgFromYaw(best_node->pose.theta);
+    pose_twist.twist = best_node->vel;
+    pose_twist.time = best_node->time;
+    current_node = best_node;
+    traj_msg.poses.push_back(pose_twist);
+    traj.push_back(current_node);
+    //add all bestnode's ancestor to the trajectory until root is reached
+    while(current_node->parent != NULL){
+    current_node = current_node->parent;
+    pose_twist.pose.position.x = current_node->pose.x;
+    pose_twist.pose.position.y = current_node->pose.y;
+    pose_twist.pose.orientation = tf::createQuaternionMsgFromYaw(current_node->pose.theta);
+    pose_twist.twist = current_node->vel;
+    pose_twist.time = current_node->time;
+    traj_msg.poses.insert(traj_msg.poses.begin(), pose_twist);
+    traj.insert(traj.begin(), current_node);
+
+    //create a marker for the nodes in the trajectory
+    path_marker.header.frame_id = "/map";
+    path_marker.header.stamp = ros::Time::now();
+    path_marker.id = rand();
+    path_marker.ns = "tree";
+    path_marker.type = visualization_msgs::Marker::SPHERE;
+    path_marker.action = visualization_msgs::Marker::ADD;
+    path_marker.pose.position.x = current_node->pose.x;
+    path_marker.pose.position.y = current_node->pose.y;
+    path_marker.pose.position.z = 0.06;
+    path_marker.scale.x = 0.1;
+    path_marker.scale.y = 0.1;
+    path_marker.scale.z = 0.1;
+    path_marker.color.r = 1.0f;
+    path_marker.color.g = 0.0f;
+    path_marker.color.b = 0.0f;
+    path_marker.color.a = 1.0;
+    path_marker.lifetime = ros::Duration(1.0);
+    path_markers.markers.push_back(path_marker);
+
+  }
+  //set the trajectory flag to stop robot from executing deprecated trajectories if this trajectory is empty
+    traj_msg.exists.data = (traj_msg.poses.size() > 1);
+}
+
+bool RRT::isGoalReached()
+{
+    //this is a distance criteria, orientation is not taken into account
+    return (sqrt(pow(root->pose.x - final_goal.x, 2) + pow(root->pose.y - final_goal.y, 2)) < params.goalTh);
+
+}
+
+custom_pose RRT::chooseRandomGoal()
+{
+    double window_size;
+    double random_score;
+    int window_size_grid;
+    int x_min_limit, x_max_limit, y_min_limit, y_max_limit;
+    int random_x, random_y;
+    custom_pose random_goal;
+
+    //getting a random number between 0 and 99 for bias
+    random_score = (rand() % 100)/100.0;
+    //computing the window size in grid cells
+    window_size_grid = (int)floor(params.windowSize / og_array.array[0].info.resolution);
+    //reducing the window size if it exceeds the map dimensions
+    x_min_limit = max(gridIFromPose(best_node->pose) - window_size_grid, 0);
+    x_max_limit = min(gridIFromPose(best_node->pose) + window_size_grid, (int)og_array.array[0].info.width);
+    y_min_limit = max(gridJFromPose(best_node->pose) - window_size_grid, 0);
+    y_max_limit = min(gridJFromPose(best_node->pose) + window_size_grid, (int)og_array.array[0].info.height);
+    if(random_score > params.bias){
+      //choosing random position within limits (window or map edges)
+      random_x = x_min_limit + rand() % (x_max_limit - x_min_limit);
+      random_y = y_min_limit + rand() % (y_max_limit - y_min_limit);
+      //same position but in map coordinates
+      random_goal = poseFromGridCoord(random_x, random_y);
+    }
+    else{
+      //choosing the final goal as random goal with a set probability (bias)
+      random_goal = final_goal;
+    }
+    return random_goal;
+}
+
+double RRT::computeNodeWeight(Node *node, custom_pose goal)
+{
+    double weight;
+
+    weight = 1.0 / (params.socialWeight * node->risk + trajLength(node->pose, goal)) * 1e-9;
+
+    return weight;
+
+}
+
+void RRT::extend(Node *node, custom_pose random_goal)
+{
+    Node* new_node;
+    new_node = new Node;
+    custom_pose expected_pose;
+    int best_control_index;
+    double control_score, best_control_score;
+    int i, j;
+    bool node_still_open;
+
+    best_control_score = 0.0;
+    //choose the best control among the (still open) possible controls
+    for(i=0; i<node->possible_controls.size(); i++){
+      if(node->possible_controls[i].open){
+        //compute what pose would be obtained with that control
+        expected_pose = robotKinematic(node->pose, node->possible_controls[i]);
+        //compute the score for that pose
+        control_score = computeControlScore(expected_pose, random_goal);
+        if(control_score >= best_control_score){
+          best_control_score = control_score;
+          best_control_index = i;
+        }
+      }
+    }
+
+    //create the new node from the best control
+    new_node->time = node->time + ros::Duration(params.timeStep);
+    new_node->pose = robotKinematic(node->pose, node->possible_controls[best_control_index]);
+    new_node->vel = node->possible_controls[best_control_index].twist;
+    new_node->parent = node;
+    new_node->sons.clear();
+    new_node->possible_controls = discretizeVelocities(new_node);
+    new_node->depth = node->depth + 1;
+    new_node->risk = computeNodeRisk(new_node);
+    new_node->isFree = (new_node->risk <= params.threshold);
+    new_node->isOpen = true;
+    //add new node to the tree (even if it is in collision, the candidate nodes vector is here to sort the nodes)
+    node->sons.push_back(new_node);
+    //close the control used to create the new node so it is impossible to create a duplicate node later
+    node->possible_controls[best_control_index].open = false;
+
+    //add the newly created node to the candidates vector (if it is free) to be taken into account for future expansion during the same growing phase
+    if(new_node->isFree && new_node->depth < params.maxDepth){
+      candidate_nodes.push_back(new_node);
+    }
+
+    //check if the last opened control was used and, if so, close the node so that it won't be selected as best node again
+    node_still_open = false;
+    for(j=0; j<node->possible_controls.size(); j++){
+      node_still_open = node_still_open || node->possible_controls[j].open;
+    }
+    node->isOpen = node_still_open;
 }
 
 vector<Control> RRT::discretizeVelocities(Node *node)
@@ -68,6 +355,77 @@ vector<Control> RRT::discretizeVelocities(Node *node)
 
     return controls;
 
+}
+
+double RRT::trajLength(custom_pose pose, custom_pose goal)
+{
+    double pose_euclide_distance;
+    double root_euclide_distance;
+    double position_improvement;
+    double rotation_diff;
+    double distance_from_goal;
+
+    //distance from pose to goal
+    pose_euclide_distance = sqrt(pow(pose.x - goal.x, 2) + pow(pose.y - goal.y, 2));
+    //distance from root to goal
+    root_euclide_distance = sqrt(pow(root->pose.x - goal.x, 2) + pow(root->pose.y - goal.y, 2));
+    //position improvement with respect to the goal
+    //ratio < 1 means we are getting closer to the goal
+    //ratio > 1 means we are getting further away from the goal
+    position_improvement = pose_euclide_distance / root_euclide_distance;
+    //angle difference between pose orientation and the pose-goal vector
+    rotation_diff = atan2(goal.y - pose.y, goal.x - pose.x) - pose.theta;
+    //angle must be in [-PI;PI]
+    if(rotation_diff > M_PI){
+      rotation_diff -= 2 * M_PI;
+    }
+    if(rotation_diff < -M_PI){
+      rotation_diff += 2 * M_PI;
+    }
+    distance_from_goal = position_improvement + params.rotationWeight * fabs(rotation_diff);
+
+    return distance_from_goal;
+}
+
+custom_pose RRT::robotKinematic(custom_pose pose, Control control)
+{
+    custom_pose new_pose;
+    double rotation_radius;
+    double delta_theta, delta_x, delta_y;
+
+    if(control.twist.linear.x == 0.0){
+    delta_theta = control.twist.angular.z * params.timeStep;
+    delta_x = 0.0;
+    delta_y = 0.0;
+    }
+    else if(control.twist.angular.z == 0.0){
+    delta_theta = 0.0;
+    delta_x = control.twist.linear.x * params.timeStep;
+    delta_y = 0.0;
+    }
+    else{
+    rotation_radius = control.twist.linear.x / control.twist.angular.z;
+    delta_theta = control.twist.angular.z * params.timeStep;
+    delta_x = rotation_radius * sin(delta_theta);
+    delta_y = rotation_radius * (1.0 - cos(delta_theta));
+    }
+    new_pose.x = pose.x + (delta_x * cos(pose.theta) - delta_y * sin(pose.theta));
+    new_pose.y = pose.y + (delta_x * sin(pose.theta) + delta_y * cos(pose.theta));
+    new_pose.theta = atan2(sin(pose.theta + delta_theta), cos(pose.theta + delta_theta));
+
+    return new_pose;
+
+}
+
+double RRT::computeControlScore(custom_pose expected_pose, custom_pose random_goal)
+{
+    double distance_from_random_goal;
+    double score;
+
+    distance_from_random_goal = trajLength(expected_pose, random_goal);
+    score = 1.0 / distance_from_random_goal + 1e-9;
+
+    return score;
 }
 
 double RRT::computeNodeRisk(Node *node)
@@ -144,9 +502,74 @@ double RRT::computeNodeRisk(Node *node)
 
 }
 
+int RRT::gridIndexFromPose(custom_pose pose)
+{
+    int index, i, j;
+    i = gridIFromPose(pose);
+    j = gridJFromPose(pose);
+    index = gridIndexFromCoord(i, j);
+    return index;
+}
+
+int RRT::gridIFromPose(custom_pose pose)
+{
+    return (int)round((pose.x - og_array.array[0].info.origin.position.x) / og_array.array[0].info.resolution);
+}
+
+int RRT::gridJFromPose(custom_pose pose)
+{
+    return (int)round((pose.y - og_array.array[0].info.origin.position.y) / og_array.array[0].info.resolution);
+}
+
+int RRT::gridIndexFromCoord(int i, int j)
+{
+    return i + og_array.array[0].info.width * j;
+}
+
+int RRT::gridIFromIndex(int index)
+{
+    return  index % og_array.array[0].info.width;
+}
+
+int RRT::gridJFromIndex(int index)
+{
+    return floor(index / og_array.array[0].info.width);
+}
+
+custom_pose RRT::poseFromGridIndex(int index)
+{
+    int i, j;
+    custom_pose pose;
+
+    i = gridIFromIndex(index);
+    j = gridJFromIndex(index);
+    pose = poseFromGridCoord(i, j);
+
+    return pose;
+
+}
+
+custom_pose RRT::poseFromGridCoord(int i, int j)
+{
+    custom_pose pose;
+    pose.x = og_array.array[0].info.resolution * i + og_array.array[0].info.origin.position.x;
+    pose.y = og_array.array[0].info.resolution * j + og_array.array[0].info.origin.position.y;
+    return pose;
+}
+
+void RRT::controllerFeedbackCallback(const std_msgs::Bool::ConstPtr &msg)
+{
+    robot_on_traj = msg->data;
+}
+
 void RRT::initcontrollerFeedbackSub()
 {
     controllerFeedbackSubscriber = nodeHandle.subscribe("/controller_feedback", 1, &RRT::controllerFeedbackCallback, this);
+}
+
+void RRT::ogArrayCallback(const riskrrt::OccupancyGridArray::ConstPtr &msg)
+{
+    og_array = *msg;
 }
 
 void RRT::initOgArraySub()
@@ -154,10 +577,16 @@ void RRT::initOgArraySub()
     ogArraySubscriber = nodeHandle.subscribe("/ogarray", 1, &RRT::ogArrayCallback, this);
 }
 
+void RRT::odomCallback(const nav_msgs::Odometry::ConstPtr &msg)
+{
+    robot_vel = msg->twist.twist;
+}
+
 void RRT::initOdomSub()
 {
     odomSubscriber = nodeHandle.subscribe("/odom", 1, &RRT::odomCallback, this);
 }
+
 
 void RRT::robot_pose_callback(const nav_msgs::Odometry &data)
 {
@@ -174,6 +603,14 @@ void RRT::initPoseSub()
 {
     //poseSubscriber = nodeHandle.subscribe("/amcl_pose", 1, &RRT::poseCallback, this);
     _robot_pose_sub = nodeHandle.subscribe("/pedsim_simulator/robot_position", 1, &RRT::robot_pose_callback, this);
+}
+
+void RRT::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
+{
+    final_goal.x = msg->pose.position.x;
+    final_goal.y = msg->pose.position.y;
+    final_goal.theta = tf::getYaw(msg->pose.orientation);
+    goal_received = true;
 }
 
 void RRT::initGoalSub()
